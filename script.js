@@ -56,7 +56,7 @@
 })();
 
 
-/* ---------------- Track Order page: mock lookup ---------------- */
+/* ---------------- Track Order page: live Supabase lookup ---------------- */
 
 (function trackOrderBehavior() {
   const form = document.getElementById("trackForm");
@@ -71,71 +71,18 @@
 
   const STEPS = ["Order Placed", "Processing", "Shipped", "Out for Delivery", "Delivered"];
 
-  // Mock order database — simulates what a real order-management API would return.
-  const ORDERS = {
-    "ZR-48213076": {
-      title: "Aria Wool Coat + Leather Belt",
-      placed: "Aug 18, 2026",
-      items: [
-        { name: "Aria Wool Coat, Charcoal — Size M", qty: 1 },
-        { name: "Leather Belt, Tan — 32in", qty: 1 },
-      ],
-      currentStep: 4,
-      stepDates: ["Aug 18", "Aug 19", "Aug 21", "Aug 23", "Aug 24"],
-      carrier: "Zephyr Express Logistics",
-      trackingNum: "ZX88213409IN",
-      shipTo: "Chennai, Tamil Nadu, IN",
-      eta: "Delivered Aug 24, 2026",
-      loc: "Delivered — front desk",
-      badgeClass: "status-delivered",
-      badgeText: "Delivered",
-      help: "Delivered and signed for. Need a return? You have until Sep 23, 2026 under our 30-day policy.",
-    },
-    "ZR-77102934": {
-      title: "Runner Sneakers, White",
-      placed: "Aug 27, 2026",
-      items: [{ name: "Runner Sneakers, White — Size 9", qty: 1 }],
-      currentStep: 3,
-      stepDates: ["Aug 27", "Aug 27", "Aug 28", "Today", ""],
-      carrier: "Zephyr Express Logistics",
-      trackingNum: "ZX55190273IN",
-      shipTo: "Chennai, Tamil Nadu, IN",
-      eta: "Today, by 8:00 PM",
-      loc: "Out for delivery — local facility, Chennai",
-      badgeClass: "status-transit",
-      badgeText: "Out for delivery",
-      help: "Your package is on its way with the local courier today. No action needed.",
-    },
-    "ZR-90042111": {
-      title: "Weekender Bag, Zephyr Rewards Edition",
-      placed: "Aug 30, 2026",
-      items: [{ name: "Zephyr Rewards Weekender Bag, Navy", qty: 1 }],
-      currentStep: 1,
-      stepDates: ["Aug 30", "In progress", "", "", ""],
-      carrier: "Not yet assigned",
-      trackingNum: "Pending — assigned once shipped",
-      shipTo: "Bengaluru, Karnataka, IN",
-      eta: "Sep 5–7, 2026 (estimated)",
-      loc: "Bengaluru Fulfillment Center",
-      badgeClass: "status-processing",
-      badgeText: "Processing",
-      help: "Orders are typically processed within 1–2 business days. Tracking details will appear here once it ships.",
-    },
-    "ZR-10239485": {
-      title: "Classic Oxford Shirt, Blue (x2)",
-      placed: "Aug 26, 2026",
-      items: [{ name: "Classic Oxford Shirt, Blue — Size L", qty: 2 }],
-      currentStep: 2,
-      stepDates: ["Aug 26", "Aug 26", "Aug 28", "", ""],
-      carrier: "Zephyr Express Logistics",
-      trackingNum: "ZX40218857IN",
-      shipTo: "Mumbai, Maharashtra, IN",
-      eta: "Sep 2–4, 2026 (estimated)",
-      loc: "In transit — Mumbai sort facility",
-      badgeClass: "status-shipped",
-      badgeText: "Shipped",
-      help: "Tracking can take 24–48 hours to update after a carrier scan. This is normal.",
-    },
+  // Backed by a real Supabase table (public.orders) via its auto-generated REST API.
+  // The publishable key below is safe to expose client-side by design (read-only,
+  // enforced by the table's Row Level Security policy) -- same pattern a Freshdesk
+  // AI Agent workflow step would use to query this same endpoint.
+  const SUPABASE_URL = "https://flpwfhyqqkftrcwyihkr.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_Jg5_0Ynw7tY8BNqJv4abSA_Aw20IXiv";
+
+  const STATUS_TO_BADGE = {
+    "Delivered": "status-delivered",
+    "Out for delivery": "status-transit",
+    "Processing": "status-processing",
+    "Shipped": "status-shipped",
   };
 
   function renderTimeline(currentStep, stepDates) {
@@ -154,51 +101,69 @@
     timelineFill.style.width = pct + "%";
   }
 
-  function renderOrder(id, data) {
-    document.getElementById("rOid").textContent = "ORDER " + id;
-    document.getElementById("rTitle").textContent = data.title;
-    document.getElementById("rMeta").textContent = "Placed " + data.placed;
-    document.getElementById("rBadge").className = "status-badge " + data.badgeClass;
-    document.getElementById("rBadgeText").textContent = data.badgeText;
+  function renderOrder(row) {
+    document.getElementById("rOid").textContent = "ORDER " + row.order_id;
+    document.getElementById("rTitle").textContent = row.title;
+    document.getElementById("rMeta").textContent = row.customer_name
+      ? `Placed ${row.placed_date} · ${row.customer_name}`
+      : "Placed " + row.placed_date;
+
+    const badgeClass = STATUS_TO_BADGE[row.status] || "status-processing";
+    document.getElementById("rBadge").className = "status-badge " + badgeClass;
+    document.getElementById("rBadgeText").textContent = row.status;
 
     const itemsEl = document.getElementById("rItems");
     itemsEl.innerHTML = "";
-    data.items.forEach((item) => {
-      const row = document.createElement("div");
-      row.className = "item-row";
-      row.innerHTML = `<span class="name">${item.name}</span><span class="qty">×${item.qty}</span>`;
-      itemsEl.appendChild(row);
+    (row.items || []).forEach((item) => {
+      const el = document.createElement("div");
+      el.className = "item-row";
+      el.innerHTML = `<span class="name">${item.name}</span><span class="qty">×${item.qty}</span>`;
+      itemsEl.appendChild(el);
     });
 
-    document.getElementById("rCarrier").textContent = data.carrier;
-    document.getElementById("rTrackNum").textContent = data.trackingNum;
-    document.getElementById("rShipTo").textContent = data.shipTo;
-    document.getElementById("rEta").textContent = data.eta;
-    document.getElementById("rLoc").textContent = data.loc;
-    document.getElementById("rHelp").innerHTML = data.help + ' Questions? See our <a href="faq.html#tracking">tracking FAQ</a>.';
+    document.getElementById("rCarrier").textContent = row.carrier || "—";
+    document.getElementById("rTrackNum").textContent = row.tracking_number || "—";
+    document.getElementById("rShipTo").textContent = row.ship_to || "—";
+    document.getElementById("rEta").textContent = row.eta || "—";
+    document.getElementById("rLoc").textContent = row.current_location || "—";
+    document.getElementById("rHelp").innerHTML = (row.help_note || "") + ' Questions? See our <a href="faq.html#tracking">tracking FAQ</a>.';
 
-    renderTimeline(data.currentStep, data.stepDates);
+    renderTimeline(row.current_step, row.step_dates || []);
   }
 
-  function doLookup(rawId) {
+  async function doLookup(rawId) {
     const id = rawId.trim().toUpperCase();
 
     resultBox.style.display = "none";
     notFound.style.display = "none";
     loading.style.display = "flex";
 
-    // Simulated network fetch — mirrors calling a real order-status API.
-    setTimeout(() => {
+    try {
+      const url = `${SUPABASE_URL}/rest/v1/orders?order_id=eq.${encodeURIComponent(id)}&select=*`;
+      const res = await fetch(url, {
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+        },
+      });
+
+      if (!res.ok) throw new Error("Order lookup failed: " + res.status);
+
+      const rows = await res.json();
       loading.style.display = "none";
-      const data = ORDERS[id];
-      if (data) {
-        renderOrder(id, data);
+
+      if (rows && rows.length > 0) {
+        renderOrder(rows[0]);
         resultBox.style.display = "block";
         resultBox.scrollIntoView({ behavior: "smooth", block: "start" });
       } else {
         notFound.style.display = "block";
       }
-    }, 750);
+    } catch (err) {
+      loading.style.display = "none";
+      notFound.style.display = "block";
+      console.error("Order lookup error:", err);
+    }
   }
 
   form.addEventListener("submit", (e) => {

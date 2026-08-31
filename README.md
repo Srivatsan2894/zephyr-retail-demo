@@ -46,16 +46,41 @@ That URL is what you'd point a Freshchat widget at, or reference in your Freddy 
 
 Sample order numbers are pre-loaded as clickable chips on the Track Order page — no need to remember them live:
 
-| Order number | Status |
-|---|---|
-| `ZR-48213076` | Delivered |
-| `ZR-77102934` | Out for delivery |
-| `ZR-90042111` | Processing |
-| `ZR-10239485` | Shipped |
+| Order number | Status | Notes |
+|---|---|---|
+| `ABC123` | Out for delivery | Mock US customer (Emily Carter, Austin TX) — good for the bot demo |
+| `XYZ789` | Delivered | Mock US customer (Marcus Webb, Denver CO) |
+| `QWE456` | Processing | Mock US customer (Priya Nandakumar, Seattle WA) |
+| `ZR-48213076` | Delivered | |
+| `ZR-77102934` | Out for delivery | |
+| `ZR-90042111` | Processing | |
+| `ZR-10239485` | Shipped | |
 
 Any other input shows a friendly "not found" state that links back to the FAQ — useful if you want to demo the escalation/fallback path too.
 
+## Backend: live Supabase database
+
+Order data is **not hardcoded** — it's a real Postgres table on Supabase, queried live over its auto-generated REST API (PostgREST). This is the same shape of call a Freshdesk AI Agent workflow step would make.
+
+- **Project**: `Zephyr Retail Orders` (Supabase project ref `flpwfhyqqkftrcwyihkr`)
+- **Table**: `public.orders` — columns: `order_id`, `customer_name`, `email`, `title`, `placed_date`, `status`, `current_step`, `step_dates` (jsonb), `carrier`, `tracking_number`, `ship_to`, `eta`, `current_location`, `help_note`, `items` (jsonb)
+- **Access**: Row Level Security is enabled with a public, read-only `SELECT` policy — anyone with an order ID can look up status, nobody can write without an authenticated/service-role key. This mirrors how a real customer-facing order-status endpoint behaves.
+- **REST endpoint** (used by `script.js`):
+  ```
+  GET https://flpwfhyqqkftrcwyihkr.supabase.co/rest/v1/orders?order_id=eq.ABC123&select=*
+  Headers:
+    apikey: sb_publishable_Jg5_0Ynw7tY8BNqJv4abSA_Aw20IXiv
+    Authorization: Bearer sb_publishable_Jg5_0Ynw7tY8BNqJv4abSA_Aw20IXiv
+  ```
+  The publishable key is safe to expose client-side by design — it only grants what the RLS policy allows (read-only here).
+
+### Using this same endpoint from Freshdesk
+
+In **AI Agent Studio → Build → Workflows**, you can add an API-call step (or use the Workflow builder's HTTP/API action) pointed at this exact URL pattern, swapping `ABC123` for a variable captured from the customer's message (e.g. `{{order_id}}`). The response JSON maps directly to what the bot needs to answer "where is my order" — `status`, `eta`, `current_location`, `tracking_number` — without you building or hosting any backend yourself.
+
+To add, update, or remove orders later, either run SQL directly against the table (via the Supabase dashboard's SQL editor) or extend this into a small internal form — the table is already structured for it.
+
 ## Notes
 
-- Order data is hardcoded in `script.js` (`ORDERS` object) — simulates what a real order-management API response would look like, with a `setTimeout` standing in for network latency. Swap this for a real `fetch()` call if you wire it up to an actual backend later.
 - Fonts (Space Grotesk, IBM Plex Sans) load from Google Fonts via CDN — requires an internet connection to render as designed; falls back to system fonts offline.
+- The tracking page requires internet access to reach Supabase — it won't work fully offline.
