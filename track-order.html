@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Track Your Order — Zephyr Retail</title>
+<meta name="description" content="Track your Zephyr Retail order in real time — see current status, carrier updates, and estimated delivery.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M3 12c3-4 6-4 9-4s6 4 9 4-6 4-9 4-6-4-9-4z%22 fill=%22%234B2ADB%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3 12c3-4 6-4 9-4s6 4 9 4-6 4-9 4-6-4-9-4z" stroke="#4B2ADB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      ZEPHYR RETAIL
+    </a>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="faq.html">FAQ</a>
+      <a href="track-order.html" class="active">Track Order</a>
+      <a href="track-order.html" class="nav-cta">Track your order</a>
+    </nav>
+  </div>
+</header>
+
+<section class="page-head">
+  <div class="wrap">
+    <p class="eyebrow">Order Tracking</p>
+    <h1>Where's my order?</h1>
+    <p>Enter your order number to see live status, carrier details, and your estimated delivery date.</p>
+  </div>
+</section>
+
+<section class="track-layout">
+  <div class="wrap">
+
+    <form class="track-form" id="trackForm">
+      <div class="row">
+        <div class="field">
+          <label for="orderId">Order number</label>
+          <input type="text" id="orderId" placeholder="e.g. ZR-48213076" autocomplete="off" required>
+        </div>
+        <div class="field">
+          <label for="email">Email on the order (optional)</label>
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="off">
+        </div>
+        <button type="submit" class="btn btn-primary" style="height:46px;">Track Package</button>
+      </div>
+    </form>
+
+    <div class="samples">
+      <span>Try a sample order:</span>
+      <button class="sample-chip" data-sample="ZR-48213076">ZR-48213076 · Delivered</button>
+      <button class="sample-chip" data-sample="ZR-77102934">ZR-77102934 · Out for delivery</button>
+      <button class="sample-chip" data-sample="ZR-90042111">ZR-90042111 · Processing</button>
+      <button class="sample-chip" data-sample="ZR-10239485">ZR-10239485 · Shipped</button>
+    </div>
+
+    <div class="result-loading" id="resultLoading">
+      <div class="spinner"></div>
+      <span>Fetching your order status…</span>
+    </div>
+
+    <div class="result-notfound" id="resultNotFound">
+      <h3>We couldn't find that order</h3>
+      <p>Double-check your order number, or find it in your confirmation email. Still stuck? Check our <a href="faq.html#tracking">tracking FAQ</a> or contact Support.</p>
+    </div>
+
+    <div class="track-result" id="trackResult">
+      <div class="order-card">
+        <div class="order-card-head">
+          <div>
+            <div class="oid" id="rOid">ORDER —</div>
+            <h3 id="rTitle">—</h3>
+            <div class="order-meta" id="rMeta">—</div>
+          </div>
+          <span class="status-badge" id="rBadge"><span class="dot"></span><span id="rBadgeText">—</span></span>
+        </div>
+
+        <div class="timeline">
+          <div class="timeline-track" id="rTimeline">
+            <div class="timeline-fill" id="rFill" style="width:0%"></div>
+            <!-- steps injected by JS -->
+          </div>
+        </div>
+
+        <div class="order-details">
+          <div class="detail-block">
+            <h4>Items in this order</h4>
+            <div id="rItems"></div>
+          </div>
+          <div class="detail-block">
+            <h4>Shipping details</h4>
+            <div class="kv"><span class="k">Carrier</span><span class="v" id="rCarrier">—</span></div>
+            <div class="kv"><span class="k">Tracking number</span><span class="v" id="rTrackNum">—</span></div>
+            <div class="kv"><span class="k">Ship to</span><span class="v" id="rShipTo">—</span></div>
+            <div class="kv"><span class="k">Est. delivery</span><span class="v" id="rEta">—</span></div>
+            <div class="kv"><span class="k">Current location</span><span class="v" id="rLoc">—</span></div>
+
+            <div class="help-note" id="rHelp"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-bottom">
+      <span>© 2026 Zephyr Retail. All rights reserved.</span>
+      <a href="index.html">Back to home</a>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
