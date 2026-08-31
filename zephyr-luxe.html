@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zephyr Luxe — Curated Designer Goods</title>
+<meta name="description" content="Zephyr Luxe: curated designer goods with insured delivery, extended returns, and a dedicated concierge support team.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22><path d=%22M3 12c3-4 6-4 9-4s6 4 9 4-6 4-9 4-6-4-9-4z%22 fill=%22%23C9A86A%22/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body class="vip-body">
+
+<header class="site-header">
+  <div class="wrap">
+    <a href="zephyr-luxe.html" class="logo">
+      <span class="logo-mark"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 12c2.5-3.5 5-5 8-5s5.5 1.5 8 5c-2.5 3.5-5 5-8 5s-5.5-1.5-8-5z" stroke="white" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="12" r="2.2" fill="white"/></svg></span>
+      <span class="logo-word"><strong>ZEPHYR</strong><small>LUXE</small></span>
+    </a>
+    <nav class="nav-links">
+      <a href="zephyr-luxe.html" class="active">Luxe Home</a>
+      <a href="faq.html#luxe">Luxe FAQ</a>
+      <a href="index.html">Zephyr Retail ↗</a>
+    </nav>
+  </div>
+</header>
+
+<section class="vip-hero">
+  <div class="wrap">
+    <div class="vip-crest">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 12c3-4 6-4 9-4s6 4 9 4-6 4-9 4-6-4-9-4z" stroke="#C9A86A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <p class="vip-eyebrow">ZEPHYR LUXE</p>
+    <h1>Curated designer goods, considered service.</h1>
+    <p class="lede">A separate storefront from Zephyr Retail, built for a different pace — insured signature delivery, a 45-day return window, and a concierge team that only handles Luxe.</p>
+  </div>
+</section>
+
+<section style="padding: 20px 0 70px;">
+  <div class="wrap" style="max-width: 880px;">
+    <div class="carousel-section" style="padding: 0 0 48px;">
+      <div class="section-head">
+        <h2>The Luxe Edit</h2>
+        <p class="section-sub">Curated arrivals, this week</p>
+      </div>
+      <div class="carousel" data-carousel>
+        <div class="carousel-track">
+          <div class="carousel-slide">
+            <img src="https://loremflickr.com/900/386/watch,luxury/lock=201" alt="Timepieces" loading="lazy">
+            <span class="carousel-caption">Timepieces</span>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://loremflickr.com/900/386/handbag,leather/lock=202" alt="Signature bags" loading="lazy">
+            <span class="carousel-caption">Signature Bags</span>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://loremflickr.com/900/386/sunglasses,fashion/lock=203" alt="Fine eyewear" loading="lazy">
+            <span class="carousel-caption">Fine Eyewear</span>
+          </div>
+          <div class="carousel-slide">
+            <img src="https://loremflickr.com/900/386/jewelry,gold/lock=204" alt="Fine jewelry" loading="lazy">
+            <span class="carousel-caption">Fine Jewelry</span>
+          </div>
+        </div>
+        <button class="carousel-arrow prev" aria-label="Previous slide">‹</button>
+        <button class="carousel-arrow next" aria-label="Next slide">›</button>
+        <div class="carousel-dots"></div>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 56px;">
+      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+        <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">Insured delivery</h3>
+        <p style="color:#8A8A9E; font-size:14px;">Every order ships in branded packaging via signature-required courier, at no extra cost.</p>
+      </div>
+      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+        <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">45-day returns</h3>
+        <p style="color:#8A8A9E; font-size:14px;">Longer than the standard 30-day window, with original packaging and authentication cards.</p>
+      </div>
+      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+        <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">A dedicated concierge</h3>
+        <p style="color:#8A8A9E; font-size:14px;">Luxe conversations are handled by a specialized 5-agent team — never the general Zephyr Retail queue.</p>
+      </div>
+    </div>
+
+    <div class="vip-card" style="max-width: 560px; margin: 0 auto; text-align: center;">
+      <h2 style="margin-bottom: 8px;">Talk to your Luxe concierge</h2>
+      <p class="sub">Open now — this chat routes directly to our specialized Luxe team, separate from Zephyr Retail's general support.</p>
+      <button class="vip-chat-cta" id="openLuxeChatBtn">Chat with Zephyr Luxe</button>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer" style="border-color:#232330;">
+  <div class="wrap">
+    <div class="footer-bottom" style="border-color:#232330;color:#6C6C80;">
+      <span>© 2026 Zephyr Luxe, a Zephyr Retail company.</span>
+      <a href="index.html" style="color:#9A9AAE;">Zephyr Retail main site</a>
+    </div>
+  </div>
+</footer>
+
+<!-- ==========================================================
+     FRESHDESK WEB CHAT WIDGET — Zephyr Luxe
+
+     Loads immediately for every visitor to this page — Scenario D
+     is about routing by BRAND/SITE, not by customer login, so
+     there's no gate here (unlike a future Zephyr Elite VIP portal,
+     which will require its own separate widget + login gate later).
+
+     NOTE: this is currently the same widget used earlier for the
+     VIP-portal prototype (bittertruth.freshdesk.com). It's wired
+     in now to prove the architecture end-to-end. When you build
+     out Scenario B separately, create a SECOND distinct widget in
+     Freshdesk Admin so Luxe and Elite never share one queue.
+
+     In Freshdesk Admin, THIS widget's own settings are where you'd
+     configure its distinct greeting text and route it exclusively
+     to your 5-agent Luxe concierge group.
+=========================================================== -->
+<script>
+function initFreshdesk() {
+  window.fdWidget.init({
+    token: "01M11N6P1DBH7PQCAFP7JZVSR5",
+    host: "https://bittertruth.freshdesk.com",
+    widgetId: "01M11N6RRJ66Z22FJCAY0RE84Z"
+  });
+}
+function initialize(i,t){var e;i.getElementById(t)?initFreshdesk():((e=i.createElement("script")).id=t,e.async=!0,e.src="https://bittertruth.freshdesk.com/webchat/js/widget.js",e.onload=initFreshdesk,i.head.appendChild(e))}function initiateCall(){initialize(document,"Freshdesk-js-sdk")}window.addEventListener?window.addEventListener("load",initiateCall,!1):window.attachEvent("load",initiateCall,!1);
+</script>
+
+<script src="script.js"></script>
+</body>
+</html>

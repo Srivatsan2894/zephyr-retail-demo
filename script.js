@@ -178,3 +178,70 @@
     });
   });
 })();
+
+
+/* ---------------- Zephyr Luxe page: chat button ---------------- */
+
+(function luxeChatBehavior() {
+  const btn = document.getElementById("openLuxeChatBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    const w = window.fdWidget;
+    if (w && typeof w.open === "function") {
+      w.open();
+    } else if (w && typeof w.show === "function") {
+      w.show();
+    } else if (w) {
+      console.info("fdWidget loaded. Available methods:", Object.keys(w));
+    } else {
+      alert("The Zephyr Luxe chat widget code hasn't been added to this page yet — paste it into zephyr-luxe.html.");
+    }
+  });
+})();
+
+
+/* ---------------- Shared carousel behavior ---------------- */
+
+(function carouselBehavior() {
+  document.querySelectorAll("[data-carousel]").forEach((root) => {
+    const track = root.querySelector(".carousel-track");
+    const slides = Array.from(root.querySelectorAll(".carousel-slide"));
+    const dotsWrap = root.querySelector(".carousel-dots");
+    if (!track || slides.length === 0) return;
+
+    let index = 0;
+    let timer;
+
+    slides.forEach((_, i) => {
+      const dot = document.createElement("button");
+      dot.className = "carousel-dot" + (i === 0 ? " active" : "");
+      dot.setAttribute("aria-label", "Go to slide " + (i + 1));
+      dot.addEventListener("click", () => { goTo(i); resetTimer(); });
+      dotsWrap.appendChild(dot);
+    });
+    const dots = Array.from(dotsWrap.children);
+
+    function goTo(i) {
+      index = (i + slides.length) % slides.length;
+      track.style.transform = `translateX(-${index * 100}%)`;
+      dots.forEach((d, di) => d.classList.toggle("active", di === index));
+    }
+
+    function next() { goTo(index + 1); }
+    function prev() { goTo(index - 1); }
+
+    const nextBtn = root.querySelector(".carousel-arrow.next");
+    const prevBtn = root.querySelector(".carousel-arrow.prev");
+    if (nextBtn) nextBtn.addEventListener("click", () => { next(); resetTimer(); });
+    if (prevBtn) prevBtn.addEventListener("click", () => { prev(); resetTimer(); });
+
+    function startTimer() { timer = setInterval(next, 4500); }
+    function resetTimer() { clearInterval(timer); startTimer(); }
+
+    root.addEventListener("mouseenter", () => clearInterval(timer));
+    root.addEventListener("mouseleave", startTimer);
+
+    startTimer();
+  });
+})();

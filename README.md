@@ -1,17 +1,18 @@
 # Zephyr Retail — Demo Site
 
-A static 3-page site for demoing Freshdesk Omni support workflows: a homepage, a searchable FAQ (sourced from the Returns/Refunds, Order Tracking, Billing, Rewards, and Zephyr Luxe knowledge articles), and a live order-tracking page with a mock lookup you can use in a real-time demo.
+A static site for demoing Freshdesk Omni support workflows: a homepage, a searchable FAQ, a live order-tracking page, and a separate **Zephyr Luxe** sub-brand page — built specifically to demo the "premium widget" architecture (Scenario D): a distinct chat greeting and dedicated agent team on the Luxe site, without touching the main brand's chat.
 
 No build step, no dependencies — plain HTML/CSS/JS.
 
 ## Files
 
 ```
-index.html          Homepage
+index.html          Homepage — Zephyr Retail
 faq.html             Searchable, filterable FAQ (accordion, 5 categories)
-track-order.html     Order tracking demo with mock order lookup
+track-order.html     Order tracking demo with live Supabase-backed lookup
+zephyr-luxe.html      Zephyr Luxe sub-brand page — own identity, own chat widget
 styles.css           Shared design tokens + component styles
-script.js            FAQ search/filter logic + mock tracking lookup
+script.js            FAQ search/filter, tracking lookup, carousel, Luxe chat button
 ```
 
 ## Run it locally
@@ -80,7 +81,17 @@ In **AI Agent Studio → Build → Workflows**, you can add an API-call step (or
 
 To add, update, or remove orders later, either run SQL directly against the table (via the Supabase dashboard's SQL editor) or extend this into a small internal form — the table is already structured for it.
 
+## Demo Scenario D: Zephyr Luxe premium widget
+
+`zephyr-luxe.html` is a public page (no login) with its own visual identity — dark theme, gold accent badge logo, distinct "The Luxe Edit" carousel — separate from the main Zephyr Retail brand.
+
+- **Widget**: currently uses the Freshdesk Web Chat widget on `bittertruth.freshdesk.com` (widget ID `01M11N6RRJ66Z22FJCAY0RE84Z`), loaded immediately for every visitor — no gating, since Scenario D routes by **brand/site**, not by customer identity.
+- **To finish the architecture properly**: create a **second, separate widget** in Freshdesk Admin → Web Chat Widgets specifically for Luxe, with its own greeting text and a routing rule to your 5-agent Luxe concierge group. Swap that widget's `token`/`widgetId` into the `<script>` block near the bottom of `zephyr-luxe.html`. Keeping this widget distinct from whatever widget eventually goes on the main site (`index.html`/`faq.html`/`track-order.html`) is what proves the "without interfering with the main brand's chat" requirement.
+- The "Chat with Zephyr Luxe" button calls `fdWidget.open()` / `.show()` if available; if neither exists it logs the widget's actual methods to the console so you can confirm the right call once it's live.
+
+*(A Zephyr Elite/VIP White Glove portal for Scenario B was prototyped earlier — login gate backed by a Supabase Edge Function — and has been removed from this build to keep focus on Scenario D. The Supabase backend for it (`vip_customers` table, `vip-login` function) is still live if you want to bring it back later.)*
+
 ## Notes
 
-- Fonts (Space Grotesk, IBM Plex Sans) load from Google Fonts via CDN — requires an internet connection to render as designed; falls back to system fonts offline.
+- Fonts (Space Grotesk, IBM Plex Sans) load from Google Fonts via CDN; carousel images load from `loremflickr.com` (free, keyword-matched, Creative Commons-licensed placeholder photos — no API key). Both require an internet connection.
 - The tracking page requires internet access to reach Supabase — it won't work fully offline.
