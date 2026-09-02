@@ -245,12 +245,20 @@
     if (widgetActivated) return;
     widgetActivated = true;
 
+    // jwtAuthToken is Freshdesk's own documented init field for identifying
+    // the customer (HS256 JWT, signed server-side in luxe-login). Only
+    // included when we actually have one, so this can never break the base
+    // widget load if the signing secret isn't configured yet.
+    const jwtLine = profile?.jwtAuthToken
+      ? `,\n          jwtAuthToken: ${JSON.stringify(profile.jwtAuthToken)}`
+      : "";
+
     const code = `
       function initFreshdesk() {
         window.fdWidget.init({
           token: "${FRESHDESK_WIDGET.token}",
           host: "${FRESHDESK_WIDGET.host}",
-          widgetId: "${FRESHDESK_WIDGET.widgetId}"
+          widgetId: "${FRESHDESK_WIDGET.widgetId}"${jwtLine}
         });
         window.__zephyrLuxeWidgetReady = true;
       }
@@ -263,50 +271,11 @@
     liveScript.textContent = code;
     document.body.appendChild(liveScript);
 
-    if (profile) attemptIdentity(profile);
-  }
-
-  // Separate, isolated identity attempt -- runs after the base widget is
-  // loading, retries briefly since widget.js loads asynchronously, and can
-  // never prevent the widget itself from working even if every attempt fails.
-  function attemptIdentity(profile, retriesLeft = 20) {
-    const w = window.fdWidget;
-    if (!w) {
-      if (retriesLeft > 0) return void setTimeout(() => attemptIdentity(profile, retriesLeft - 1), 250);
-      console.info("Zephyr Luxe: fdWidget never became available; skipping identity.");
-      return;
+    if (profile?.jwtAuthToken) {
+      console.info("Zephyr Luxe: widget initialized with signed JWT identity for", profile.email);
+    } else {
+      console.info("Zephyr Luxe: widget initialized WITHOUT identity -- FRESHDESK_JWT_SECRET likely not set yet in Supabase.");
     }
-
-    const nameParts = (profile.full_name || "").trim().split(" ");
-    const payload = {
-      externalId: profile.email,
-      email: profile.email,
-      firstName: nameParts[0] || "",
-      lastName: nameParts.slice(1).join(" "),
-    };
-
-    const attempts = [
-      () => w.identify && w.identify(payload),
-      () => w.setUser && w.setUser(payload),
-      () => w.user && w.user.setProperties && w.user.setProperties(payload),
-      () => w.setConfig && w.setConfig({ user: payload }),
-    ];
-
-    for (const attempt of attempts) {
-      try {
-        const result = attempt();
-        if (result !== undefined) {
-          console.info("Zephyr Luxe: identity call succeeded:", attempt.toString());
-          return;
-        }
-      } catch (_e) { /* try next */ }
-    }
-
-    console.info(
-      "Zephyr Luxe: could not confirm fdWidget's identity method. Available methods:",
-      Object.keys(w)
-    );
-    console.info("Profile that needs wiring once the real method is confirmed:", payload);
   }
 
   // Restore session on page load, if already signed in this browser session.
@@ -332,8 +301,9 @@
         const data = await res.json();
 
         if (data.success) {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data.profile));
-          applySignedInUI(data.profile);
+          const stored = { ...data.profile, jwtAuthToken: data.jwtAuthToken || null };
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+          applySignedInUI(stored);
           closeModal();
           loginForm.reset();
         } else {
