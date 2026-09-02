@@ -225,22 +225,54 @@
     if (welcomeName) welcomeName.textContent = "Signed in as " + profile.full_name.split(" ")[0];
     if (navLink) navLink.textContent = profile.full_name.split(" ")[0];
     if (chatBtn) chatBtn.style.display = "inline-flex";
-    activateFreshdeskWidget();
+    activateFreshdeskWidget(profile);
   }
 
-  // The widget script sits inert (type="text/plain") until sign-in succeeds.
-  // This converts it into a real, executing <script> tag exactly once.
+  // Widget config lives here, not in the HTML, because identity needs to be
+  // injected at init time. Confirmed via Freshchat's own SDK docs: identity
+  // is set through config-object keys (externalId, firstName, lastName,
+  // email) passed directly to init(), not a separate post-init method call.
+  const FRESHDESK_WIDGET = {
+    token: "01M11N6P1DBH7PQCAFP7JZVSR5",
+    host: "https://bittertruth.freshdesk.com",
+    widgetId: "01M11N6RRJ66Z22FJCAY0RE84Z",
+  };
+
   let widgetActivated = false;
-  function activateFreshdeskWidget() {
+  function activateFreshdeskWidget(profile) {
     if (widgetActivated) return;
-    const slot = document.getElementById("luxeWidgetSlot");
-    if (!slot) return;
-    const code = slot.textContent.trim();
-    if (!code) return;
+    widgetActivated = true;
+
+    const nameParts = (profile?.full_name || "").trim().split(" ");
+    const firstName = nameParts[0] || "";
+    const lastName = nameParts.slice(1).join(" ");
+
+    const initConfig = {
+      token: FRESHDESK_WIDGET.token,
+      host: FRESHDESK_WIDGET.host,
+      widgetId: FRESHDESK_WIDGET.widgetId,
+      externalId: profile?.email,
+      email: profile?.email,
+      firstName: firstName,
+      lastName: lastName,
+    };
+
+    window.__zephyrLuxeWidgetConfig = initConfig; // exposed for console debugging
+
+    const code = `
+      function initFreshdesk() {
+        window.fdWidget.init(${JSON.stringify(initConfig)});
+      }
+      function initialize(i,t){var e;i.getElementById(t)?initFreshdesk():((e=i.createElement("script")).id=t,e.async=!0,e.src="${FRESHDESK_WIDGET.host}/webchat/js/widget.js",e.onload=initFreshdesk,i.head.appendChild(e))}
+      function initiateCall(){initialize(document,"Freshdesk-js-sdk")}
+      initiateCall();
+    `;
+
     const liveScript = document.createElement("script");
     liveScript.textContent = code;
     document.body.appendChild(liveScript);
-    widgetActivated = true;
+
+    console.info("Zephyr Luxe: widget initialized with identity config:", initConfig);
   }
 
   // Restore session on page load, if already signed in this browser session.
@@ -285,43 +317,9 @@
     });
   }
 
-  // Best-effort identify: fdWidget's exact API for this isn't publicly
-  // documented, so this tries the most plausible method shapes and falls
-  // back to logging what's actually available, rather than assuming.
-  function tryIdentify(w, profile) {
-    const payload = { name: profile.full_name, email: profile.email };
-    const attempts = [
-      () => w.identify && w.identify(payload),
-      () => w.setUser && w.setUser(payload),
-      () => w.user && w.user.setProperties && w.user.setProperties(payload),
-      () => w.setConfig && w.setConfig({ user: payload }),
-    ];
-    for (const attempt of attempts) {
-      try {
-        const result = attempt();
-        if (result !== undefined) {
-          console.info("Zephyr Luxe: identify call succeeded via", attempt);
-          return true;
-        }
-      } catch (_e) { /* try next */ }
-    }
-    console.info(
-      "Zephyr Luxe: could not confirm fdWidget's identify method. Available methods:",
-      Object.keys(w)
-    );
-    console.info("Signed-in profile (for manual wiring once the real method is confirmed):", payload);
-    return false;
-  }
-
   if (chatBtn) {
     chatBtn.addEventListener("click", () => {
       const w = window.fdWidget;
-      const profile = getStoredProfile();
-
-      if (w && profile) {
-        tryIdentify(w, profile);
-      }
-
       if (w && typeof w.open === "function") {
         w.open();
       } else if (w && typeof w.show === "function") {

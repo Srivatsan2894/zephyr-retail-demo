@@ -144,35 +144,27 @@
 <!-- ==========================================================
      FRESHDESK WEB CHAT WIDGET — Zephyr Luxe
 
-     Now gated behind sign-in: this script sits inert (type="text/plain")
-     and does nothing until a visitor successfully logs in. script.js
-     converts it into a live, executing <script> tag at that point (see
-     activateFreshdeskWidget() in the luxeLoginBehavior IIFE), and also
-     attempts to pass the signed-in name/email to the widget so agents
-     see who they're talking to instead of "Visitor".
+     Gated behind sign-in: nothing loads until a visitor successfully
+     logs in. The actual fdWidget.init() call now lives entirely in
+     script.js (see activateFreshdeskWidget() in luxeLoginBehavior),
+     because it needs to inject the signed-in customer's real name
+     and email directly into the init config -- confirmed via
+     Freshchat's own SDK docs to be config-object keys (externalId,
+     firstName, lastName, email) passed at init time, not a separate
+     method called after the fact. Since the widget only activates
+     post-login, we already have that profile in hand at the exact
+     moment we build the init call.
 
      This is a deliberate shift from Scenario D's original "public,
      routes by brand" design (any visitor, no login) toward the same
-     login-gated pattern used for the VIP scenario. Worth remembering
-     if you're presenting this against the original assignment brief,
-     since Scenario D as written doesn't require a login gate -- this
-     is an intentional product decision layered on top.
+     login-gated pattern used for the VIP scenario -- worth remembering
+     if presenting this against the original assignment brief.
 
      NOTE: still the same widget used for the earlier VIP-portal
      prototype (bittertruth.freshdesk.com). Create a second distinct
      widget in Freshdesk Admin when you want Luxe and Elite fully
      separated with their own greetings and agent groups.
 =========================================================== -->
-<script id="luxeWidgetSlot" type="text/plain">
-function initFreshdesk() {
-  window.fdWidget.init({
-    token: "01M11N6P1DBH7PQCAFP7JZVSR5",
-    host: "https://bittertruth.freshdesk.com",
-    widgetId: "01M11N6RRJ66Z22FJCAY0RE84Z"
-  });
-}
-function initialize(i,t){var e;i.getElementById(t)?initFreshdesk():((e=i.createElement("script")).id=t,e.async=!0,e.src="https://bittertruth.freshdesk.com/webchat/js/widget.js",e.onload=initFreshdesk,i.head.appendChild(e))}function initiateCall(){initialize(document,"Freshdesk-js-sdk")}initiateCall();
-</script>
 
 <script src="script.js"></script>
 </body>
