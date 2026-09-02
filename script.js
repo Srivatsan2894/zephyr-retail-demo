@@ -228,10 +228,12 @@
     activateFreshdeskWidget(profile);
   }
 
-  // Widget config lives here, not in the HTML, because identity needs to be
-  // injected at init time. Confirmed via Freshchat's own SDK docs: identity
-  // is set through config-object keys (externalId, firstName, lastName,
-  // email) passed directly to init(), not a separate post-init method call.
+  // Widget config lives here, not in the HTML, so identity can be injected
+  // once the customer is known. IMPORTANT: the base init call below is
+  // exactly the original, confirmed-working call (token/host/widgetId only)
+  // -- identity is layered on AFTER that succeeds, in a separate try/caught
+  // step, so a wrong guess about fdWidget's identity API can never break
+  // the widget loading at all again.
   const FRESHDESK_WIDGET = {
     token: "01M11N6P1DBH7PQCAFP7JZVSR5",
     host: "https://bittertruth.freshdesk.com",
@@ -243,25 +245,14 @@
     if (widgetActivated) return;
     widgetActivated = true;
 
-    const nameParts = (profile?.full_name || "").trim().split(" ");
-    const firstName = nameParts[0] || "";
-    const lastName = nameParts.slice(1).join(" ");
-
-    const initConfig = {
-      token: FRESHDESK_WIDGET.token,
-      host: FRESHDESK_WIDGET.host,
-      widgetId: FRESHDESK_WIDGET.widgetId,
-      externalId: profile?.email,
-      email: profile?.email,
-      firstName: firstName,
-      lastName: lastName,
-    };
-
-    window.__zephyrLuxeWidgetConfig = initConfig; // exposed for console debugging
-
     const code = `
       function initFreshdesk() {
-        window.fdWidget.init(${JSON.stringify(initConfig)});
+        window.fdWidget.init({
+          token: "${FRESHDESK_WIDGET.token}",
+          host: "${FRESHDESK_WIDGET.host}",
+          widgetId: "${FRESHDESK_WIDGET.widgetId}"
+        });
+        window.__zephyrLuxeWidgetReady = true;
       }
       function initialize(i,t){var e;i.getElementById(t)?initFreshdesk():((e=i.createElement("script")).id=t,e.async=!0,e.src="${FRESHDESK_WIDGET.host}/webchat/js/widget.js",e.onload=initFreshdesk,i.head.appendChild(e))}
       function initiateCall(){initialize(document,"Freshdesk-js-sdk")}
@@ -272,7 +263,50 @@
     liveScript.textContent = code;
     document.body.appendChild(liveScript);
 
-    console.info("Zephyr Luxe: widget initialized with identity config:", initConfig);
+    if (profile) attemptIdentity(profile);
+  }
+
+  // Separate, isolated identity attempt -- runs after the base widget is
+  // loading, retries briefly since widget.js loads asynchronously, and can
+  // never prevent the widget itself from working even if every attempt fails.
+  function attemptIdentity(profile, retriesLeft = 20) {
+    const w = window.fdWidget;
+    if (!w) {
+      if (retriesLeft > 0) return void setTimeout(() => attemptIdentity(profile, retriesLeft - 1), 250);
+      console.info("Zephyr Luxe: fdWidget never became available; skipping identity.");
+      return;
+    }
+
+    const nameParts = (profile.full_name || "").trim().split(" ");
+    const payload = {
+      externalId: profile.email,
+      email: profile.email,
+      firstName: nameParts[0] || "",
+      lastName: nameParts.slice(1).join(" "),
+    };
+
+    const attempts = [
+      () => w.identify && w.identify(payload),
+      () => w.setUser && w.setUser(payload),
+      () => w.user && w.user.setProperties && w.user.setProperties(payload),
+      () => w.setConfig && w.setConfig({ user: payload }),
+    ];
+
+    for (const attempt of attempts) {
+      try {
+        const result = attempt();
+        if (result !== undefined) {
+          console.info("Zephyr Luxe: identity call succeeded:", attempt.toString());
+          return;
+        }
+      } catch (_e) { /* try next */ }
+    }
+
+    console.info(
+      "Zephyr Luxe: could not confirm fdWidget's identity method. Available methods:",
+      Object.keys(w)
+    );
+    console.info("Profile that needs wiring once the real method is confirmed:", payload);
   }
 
   // Restore session on page load, if already signed in this browser session.
