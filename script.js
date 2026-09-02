@@ -224,6 +224,23 @@
     if (signedInState) signedInState.style.display = "block";
     if (welcomeName) welcomeName.textContent = "Signed in as " + profile.full_name.split(" ")[0];
     if (navLink) navLink.textContent = profile.full_name.split(" ")[0];
+    if (chatBtn) chatBtn.style.display = "inline-flex";
+    activateFreshdeskWidget();
+  }
+
+  // The widget script sits inert (type="text/plain") until sign-in succeeds.
+  // This converts it into a real, executing <script> tag exactly once.
+  let widgetActivated = false;
+  function activateFreshdeskWidget() {
+    if (widgetActivated) return;
+    const slot = document.getElementById("luxeWidgetSlot");
+    if (!slot) return;
+    const code = slot.textContent.trim();
+    if (!code) return;
+    const liveScript = document.createElement("script");
+    liveScript.textContent = code;
+    document.body.appendChild(liveScript);
+    widgetActivated = true;
   }
 
   // Restore session on page load, if already signed in this browser session.
@@ -312,7 +329,7 @@
       } else if (w) {
         console.info("fdWidget loaded. Available methods:", Object.keys(w));
       } else {
-        alert("The Zephyr Luxe chat widget code hasn't been added to this page yet — paste it into zephyr-luxe.html.");
+        alert("The chat widget is still loading — give it a moment and click again.");
       }
     });
   }
