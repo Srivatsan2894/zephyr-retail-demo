@@ -23,6 +23,7 @@
       <a href="zephyr-luxe.html" class="active">Luxe Home</a>
       <a href="faq.html#luxe">Luxe FAQ</a>
       <a href="index.html">Zephyr Retail ↗</a>
+      <a href="#" id="luxeSignInLink" style="color:#C9A86A;">Sign in</a>
     </nav>
   </div>
 </header>
@@ -48,19 +49,19 @@
       <div class="carousel" data-carousel>
         <div class="carousel-track">
           <div class="carousel-slide">
-            <img src="https://loremflickr.com/900/386/watch,luxury/lock=201" alt="Timepieces" loading="lazy">
+            <img src="assets/card-luxe-watch.png" alt="Timepieces" loading="lazy">
             <span class="carousel-caption">Timepieces</span>
           </div>
           <div class="carousel-slide">
-            <img src="https://loremflickr.com/900/386/handbag,leather/lock=202" alt="Signature bags" loading="lazy">
+            <img src="assets/card-luxe-bag.png" alt="Signature bags" loading="lazy">
             <span class="carousel-caption">Signature Bags</span>
           </div>
           <div class="carousel-slide">
-            <img src="https://loremflickr.com/900/386/sunglasses,fashion/lock=203" alt="Fine eyewear" loading="lazy">
+            <img src="assets/card-luxe-sunglasses.png" alt="Fine eyewear" loading="lazy">
             <span class="carousel-caption">Fine Eyewear</span>
           </div>
           <div class="carousel-slide">
-            <img src="https://loremflickr.com/900/386/jewelry,gold/lock=204" alt="Fine jewelry" loading="lazy">
+            <img src="assets/card-luxe-ring.png" alt="Fine jewelry" loading="lazy">
             <span class="carousel-caption">Fine Jewelry</span>
           </div>
         </div>
@@ -71,15 +72,15 @@
     </div>
 
     <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap: 28px; margin-bottom: 56px;">
-      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+      <div class="luxe-feature-card">
         <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">Insured delivery</h3>
         <p style="color:#8A8A9E; font-size:14px;">Every order ships in branded packaging via signature-required courier, at no extra cost.</p>
       </div>
-      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+      <div class="luxe-feature-card">
         <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">45-day returns</h3>
         <p style="color:#8A8A9E; font-size:14px;">Longer than the standard 30-day window, with original packaging and authentication cards.</p>
       </div>
-      <div style="border-top: 2px solid #C9A86A; padding-top: 16px;">
+      <div class="luxe-feature-card">
         <h3 style="color:#F5F5F8; font-size:16px; margin-bottom:6px;">A dedicated concierge</h3>
         <p style="color:#8A8A9E; font-size:14px;">Luxe conversations are handled by a specialized 5-agent team — never the general Zephyr Retail queue.</p>
       </div>
@@ -88,10 +89,48 @@
     <div class="vip-card" style="max-width: 560px; margin: 0 auto; text-align: center;">
       <h2 style="margin-bottom: 8px;">Talk to your Luxe concierge</h2>
       <p class="sub">Open now — this chat routes directly to our specialized Luxe team, separate from Zephyr Retail's general support.</p>
+
+      <div id="luxeSignedOutState">
+        <p style="font-size:13px; color:#8A8A9E; margin-bottom:16px;">
+          <a href="#" id="luxeSignInLink2" style="color:#C9A86A; font-weight:600;">Sign in</a> first so your concierge already knows who you are.
+        </p>
+      </div>
+
+      <div id="luxeSignedInState" style="display:none; margin-bottom:16px;">
+        <span class="vip-welcome-badge">✦ <span id="luxeWelcomeName">Signed in</span></span>
+      </div>
+
       <button class="vip-chat-cta" id="openLuxeChatBtn">Chat with Zephyr Luxe</button>
     </div>
   </div>
 </section>
+
+<!-- ============== Sign-in modal ============== -->
+<div id="luxeLoginModal" style="display:none; position:fixed; inset:0; z-index:500; background:rgba(0,0,0,0.6); align-items:center; justify-content:center;">
+  <div class="vip-card" style="max-width:400px; width:90%; position:relative;">
+    <button id="luxeLoginClose" aria-label="Close" style="position:absolute; top:14px; right:14px; background:none; border:none; color:#6C6C80; font-size:20px; cursor:pointer; line-height:1;">&times;</button>
+    <h2>Sign in to Zephyr Luxe</h2>
+    <p class="sub">Your concierge will already know your name when you open chat.</p>
+
+    <div class="vip-error" id="luxeLoginError">Invalid email or password. Please try again.</div>
+
+    <form id="luxeLoginForm">
+      <div class="vip-field">
+        <label for="luxeEmail">Email</label>
+        <input type="email" id="luxeEmail" placeholder="you@example.com" autocomplete="username" required>
+      </div>
+      <div class="vip-field">
+        <label for="luxePassword">Password</label>
+        <input type="password" id="luxePassword" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="vip-submit" id="luxeLoginSubmitBtn">Sign in</button>
+    </form>
+
+    <div class="vip-hint">
+      Demo credentials — <code>steve.jobs@acme.com</code>, password <code>acme1234</code>.
+    </div>
+  </div>
+</div>
 
 <footer class="site-footer" style="border-color:#232330;">
   <div class="wrap">
@@ -106,19 +145,19 @@
      FRESHDESK WEB CHAT WIDGET — Zephyr Luxe
 
      Loads immediately for every visitor to this page — Scenario D
-     is about routing by BRAND/SITE, not by customer login, so
-     there's no gate here (unlike a future Zephyr Elite VIP portal,
-     which will require its own separate widget + login gate later).
+     is about routing by BRAND/SITE, not by customer identity, so
+     the page itself stays public. Sign-in is optional and layered
+     on top: if a visitor signs in before opening chat, script.js
+     attempts to pass their name and email to the widget so agents
+     see who they are instead of "Visitor". That identify step uses
+     defensive method-name attempts since fdWidget's exact API for
+     this isn't publicly documented -- see script.js for details
+     and the console logging that reveals the real method once live.
 
      NOTE: this is currently the same widget used earlier for the
-     VIP-portal prototype (bittertruth.freshdesk.com). It's wired
-     in now to prove the architecture end-to-end. When you build
-     out Scenario B separately, create a SECOND distinct widget in
+     VIP-portal prototype (bittertruth.freshdesk.com). When you set
+     up Scenario B separately, create a SECOND distinct widget in
      Freshdesk Admin so Luxe and Elite never share one queue.
-
-     In Freshdesk Admin, THIS widget's own settings are where you'd
-     configure its distinct greeting text and route it exclusively
-     to your 5-agent Luxe concierge group.
 =========================================================== -->
 <script>
 function initFreshdesk() {

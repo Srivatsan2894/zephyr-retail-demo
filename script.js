@@ -180,24 +180,142 @@
 })();
 
 
-/* ---------------- Zephyr Luxe page: chat button ---------------- */
+/* ---------------- Zephyr Luxe page: sign in + chat identity ---------------- */
 
-(function luxeChatBehavior() {
-  const btn = document.getElementById("openLuxeChatBtn");
-  if (!btn) return;
+(function luxeLoginBehavior() {
+  const loginForm = document.getElementById("luxeLoginForm");
+  const chatBtn = document.getElementById("openLuxeChatBtn");
+  if (!loginForm && !chatBtn) return;
 
-  btn.addEventListener("click", () => {
-    const w = window.fdWidget;
-    if (w && typeof w.open === "function") {
-      w.open();
-    } else if (w && typeof w.show === "function") {
-      w.show();
-    } else if (w) {
-      console.info("fdWidget loaded. Available methods:", Object.keys(w));
-    } else {
-      alert("The Zephyr Luxe chat widget code hasn't been added to this page yet — paste it into zephyr-luxe.html.");
+  const SUPABASE_URL = "https://flpwfhyqqkftrcwyihkr.supabase.co";
+  const LOGIN_ENDPOINT = SUPABASE_URL + "/functions/v1/luxe-login";
+  const STORAGE_KEY = "zephyr_luxe_profile";
+
+  const modal = document.getElementById("luxeLoginModal");
+  const errorBox = document.getElementById("luxeLoginError");
+  const submitBtn = document.getElementById("luxeLoginSubmitBtn");
+  const signedOutState = document.getElementById("luxeSignedOutState");
+  const signedInState = document.getElementById("luxeSignedInState");
+  const welcomeName = document.getElementById("luxeWelcomeName");
+  const navLink = document.getElementById("luxeSignInLink");
+
+  function openModal(e) {
+    if (e) e.preventDefault();
+    if (modal) modal.style.display = "flex";
+  }
+  function closeModal() {
+    if (modal) modal.style.display = "none";
+  }
+
+  document.getElementById("luxeSignInLink")?.addEventListener("click", openModal);
+  document.getElementById("luxeSignInLink2")?.addEventListener("click", openModal);
+  document.getElementById("luxeLoginClose")?.addEventListener("click", closeModal);
+  modal?.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+
+  function getStoredProfile() {
+    try {
+      const raw = sessionStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
+  }
+
+  function applySignedInUI(profile) {
+    if (signedOutState) signedOutState.style.display = "none";
+    if (signedInState) signedInState.style.display = "block";
+    if (welcomeName) welcomeName.textContent = "Signed in as " + profile.full_name.split(" ")[0];
+    if (navLink) navLink.textContent = profile.full_name.split(" ")[0];
+  }
+
+  // Restore session on page load, if already signed in this browser session.
+  const existing = getStoredProfile();
+  if (existing) applySignedInUI(existing);
+
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      errorBox.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Signing in…";
+
+      const email = document.getElementById("luxeEmail").value.trim();
+      const password = document.getElementById("luxePassword").value;
+
+      try {
+        const res = await fetch(LOGIN_ENDPOINT, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data.profile));
+          applySignedInUI(data.profile);
+          closeModal();
+          loginForm.reset();
+        } else {
+          errorBox.textContent = data.error || "Invalid email or password. Please try again.";
+          errorBox.style.display = "block";
+        }
+      } catch (err) {
+        errorBox.textContent = "Couldn't reach the sign-in service. Please try again.";
+        errorBox.style.display = "block";
+        console.error("Luxe login error:", err);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Sign in";
+      }
+    });
+  }
+
+  // Best-effort identify: fdWidget's exact API for this isn't publicly
+  // documented, so this tries the most plausible method shapes and falls
+  // back to logging what's actually available, rather than assuming.
+  function tryIdentify(w, profile) {
+    const payload = { name: profile.full_name, email: profile.email };
+    const attempts = [
+      () => w.identify && w.identify(payload),
+      () => w.setUser && w.setUser(payload),
+      () => w.user && w.user.setProperties && w.user.setProperties(payload),
+      () => w.setConfig && w.setConfig({ user: payload }),
+    ];
+    for (const attempt of attempts) {
+      try {
+        const result = attempt();
+        if (result !== undefined) {
+          console.info("Zephyr Luxe: identify call succeeded via", attempt);
+          return true;
+        }
+      } catch (_e) { /* try next */ }
     }
-  });
+    console.info(
+      "Zephyr Luxe: could not confirm fdWidget's identify method. Available methods:",
+      Object.keys(w)
+    );
+    console.info("Signed-in profile (for manual wiring once the real method is confirmed):", payload);
+    return false;
+  }
+
+  if (chatBtn) {
+    chatBtn.addEventListener("click", () => {
+      const w = window.fdWidget;
+      const profile = getStoredProfile();
+
+      if (w && profile) {
+        tryIdentify(w, profile);
+      }
+
+      if (w && typeof w.open === "function") {
+        w.open();
+      } else if (w && typeof w.show === "function") {
+        w.show();
+      } else if (w) {
+        console.info("fdWidget loaded. Available methods:", Object.keys(w));
+      } else {
+        alert("The Zephyr Luxe chat widget code hasn't been added to this page yet — paste it into zephyr-luxe.html.");
+      }
+    });
+  }
 })();
 
 
